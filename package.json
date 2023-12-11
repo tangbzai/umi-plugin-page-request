@@ -1,0 +1,31 @@
+{
+  "name": "umi-plugin-page-request",
+  "version": "0.0.1",
+  "description": "",
+  "scripts": {
+    "watch": "rollup -wc --configPlugin @rollup/plugin-typescript",
+    "build": "rollup -c --configPlugin @rollup/plugin-typescript",
+    "prettier": "prettier -c --write \"src/**/*\""
+  },
+  "keywords": [],
+  "author": "tangbzai",
+  "license": "MIT",
+  "files": [
+    "lib/",
+    "index.d.ts"
+  ],
+  "main": "lib/index.js",
+  "types": "./index.d.ts",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.5",
+    "prettier": "^3.1.1",
+    "rollup": "^4.8.0",
+    "tslib": "^2.6.2"
+  },
+  "peerDependencies": {
+    "umi": "3.x || 4.x"
+  }
+}

@@ -1,0 +1,43 @@
+import type { IApi } from 'umi'
+import type { RequestFunction } from './getServiceMap'
+import InitPageRequest from './pageRequestMap'
+import { pageRequestTransform } from './transform'
+
+/**
+ * 获取页面组件使用的所有接口
+ * @param api 插件API
+ */
+export default async (api: IApi) => {
+  api.describe({
+    key: 'pageRequest',
+    enableBy: api.EnableBy.register,
+  })
+  api.logger.info('Using PageRequest Plugin')
+
+  /** 生成插件的入口临时文件 */
+  function writeIndexTmpFile(content = '{}') {
+    api.writeTmpFile({
+      content: `const PAGE_REQUEST_MAP = ${content}
+export { PAGE_REQUEST_MAP }`,
+      path: 'index.ts',
+    })
+  }
+  // 初始化
+  const createPageRequestMap = InitPageRequest(api)
+  // 构建成功之前
+  api.onPrepareBuildSuccess(({ fileImports, isWatch }) => {
+    // 开发环境不在初始构建时执行 - 优化启动速度
+    if (api.env === 'development' && !isWatch) return
+    // 创建获取 PAGE_REQUEST_MAP
+    const pageRequestMap: Record<string, RequestFunction[] | undefined> =
+      createPageRequestMap(fileImports)
+    // 写入 PAGE_REQUEST_MAP 至入口文件
+    writeIndexTmpFile(pageRequestTransform(pageRequestMap))
+  })
+
+  api.onGenerateFiles(({ isFirstTime }) => {
+    if (!isFirstTime) return
+    // 第一次调用则生成空的入口临时文件使得 Umi 成功捕获入口文件的 exports
+    writeIndexTmpFile()
+  })
+}
