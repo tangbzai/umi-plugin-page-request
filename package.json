@@ -1,13 +1,16 @@
 {
   "name": "umi-plugin-page-request",
   "version": "0.0.1",
-  "description": "",
+  "description": "umi 插件获取页面中使用的接口并生成页面与接口的映射",
   "scripts": {
     "watch": "rollup -wc --configPlugin @rollup/plugin-typescript",
     "build": "rollup -c --configPlugin @rollup/plugin-typescript",
     "prettier": "prettier -c --write \"src/**/*\""
   },
-  "keywords": [],
+  "keywords": [
+    "umi",
+    "umi-plugin"
+  ],
   "author": "tangbzai",
   "license": "MIT",
   "files": [
