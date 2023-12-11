@@ -6,7 +6,23 @@
 
 获取`/src/pages/`底下的所有页面，并且根据`import`语法获取这些页面中使用到的接口（`/src/services/`里`export`的接口）并暴露到`umi`中
 
-### 示例
+### 安装
+
+1. 添加依赖包
+
+```bash
+npm install umi-plugin-page-request
+```
+
+2. 配置文件的`plugin`里加入`umi-plugin-page-request`
+
+```ts
+...
+plugin: ['umi-plugin-page-request']
+...
+```
+
+### 使用示例
 
 目录结构
 
