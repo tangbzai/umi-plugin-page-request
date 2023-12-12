@@ -1,8 +1,8 @@
 import fs from 'fs'
 import path from 'path'
+import type { RequestFunction } from '../index.d'
 
-export type RequestFunction = { name: string; method: string; url: string }
-export type RequestFunctionMap = Record<string, RequestFunction | undefined>
+type RequestFunctionMap = Record<string, RequestFunction | undefined>
 /** 通过文件路径，获取请求函数对象列表 */
 function getFunctionList(serviceFilePath: string): RequestFunctionMap {
   return (
@@ -28,9 +28,7 @@ function getFunctionList(serviceFilePath: string): RequestFunctionMap {
  * 获取 services 文件夹下所有分组的接口
  * @returns services 文件夹下所有分组的接口
  */
-export default function getServiceMap(
-  absSrcPath: string,
-): Record<string, RequestFunctionMap> {
+export default function getServiceMap(absSrcPath: string): Record<string, RequestFunctionMap> {
   // services 文件夹 路径
   const servicePath = path.join(absSrcPath, 'services')
 

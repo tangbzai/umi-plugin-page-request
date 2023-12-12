@@ -1,5 +1,5 @@
 import type { IApi } from 'umi'
-import type { RequestFunction } from './getServiceMap'
+import type { RequestFunction } from '../index.d'
 import InitPageRequest from './pageRequestMap'
 import { pageRequestTransform } from './transform'
 

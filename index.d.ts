@@ -1,4 +1,7 @@
+export type RequestFunction = { name: string; method: string; url: string }
+
 export type DeclareKind = 'value' | 'type'
+
 export type ImportDeclaration = {
   type: 'ImportDeclaration'
   source: string

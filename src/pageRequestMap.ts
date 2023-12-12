@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import type { IApi } from 'umi'
-import type { RequestFunction } from './getServiceMap'
+import type { RequestFunction } from '../index.d'
 import getServiceMap from './getServiceMap'
 import type { Declaration, ImportDeclaration } from '../index.d'
 

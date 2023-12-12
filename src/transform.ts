@@ -1,4 +1,4 @@
-import type { RequestFunction } from './getServiceMap'
+import type { RequestFunction } from '../index.d'
 
 function getSpace(count = 0) {
   return ' '.repeat(count)
@@ -22,7 +22,7 @@ export function pageRequestTransform<
         '[\n'
       ) + `${getSpace(space)}]`
     )
-  function getItemValue(value: string | number | RequestFunction[]) {
+  function getItemValue(value?: string | number | RequestFunction[]) {
     if (value instanceof Object) return pageRequestTransform(value, space + 2)
     return addStringQuote(value)
   }
