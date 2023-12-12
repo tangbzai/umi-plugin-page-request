@@ -27,6 +27,22 @@ function dirOrFileNormalization(dirOrFile?: string): string[] {
     .filter((dirName) => /index\.(j|t)sx?$/.test(dirName))
     .flatMap((dir) => dirOrFileNormalization(path.join(dirOrFile, `./${dir}`)))
 }
+
+/** 列表去重后返回（含自身重复及与旧列表重复）*/
+function filterNoRepeat<T>(newList: T[], oldList: T[], keyFn: (value: T) => string | number) {
+  const oldKeyList = oldList.map(keyFn)
+  return (
+    newList
+      .reduce((noRepeatList, item) => {
+        // 去除自身重复项
+        if (!noRepeatList.some((value) => keyFn(value) === keyFn(item))) noRepeatList.push(item)
+        return noRepeatList
+      }, [])
+      // 去除与旧列表之间的重复项
+      .filter((value) => !oldKeyList.includes(keyFn(value)))
+  )
+}
+
 export default function InitPageRequest(api: IApi) {
   /** Services 文件夹下所有分组的接口的映射  */
   const servicesMap = getServiceMap(api.paths.absSrcPath)
@@ -69,10 +85,8 @@ export default function InitPageRequest(api: IApi) {
    * @param declaration import 描述对象
    * @returns 组件文件 import 的所有接口列表
    */
-  function getComponentServicesList(
-    filePath: string,
-    declarationList: ImportDeclaration[]
-  ): RequestFunction[] {
+  function getComponentServicesList(filePath: string): RequestFunction[] {
+    const declarationList = getImportDeclarationByFilePath(filePath)
     return declarationList.flatMap((declaration) => {
       if (declaration.source.startsWith('@/services')) {
         return getServiceList(
@@ -95,53 +109,37 @@ export default function InitPageRequest(api: IApi) {
       }
       // 获取模块的文件
       const filePathList = dirOrFileNormalization(aliasPathFormatAbsPath(dependencyPath))
-
-      return filePathList.flatMap(
-        (absPath) =>
-          getComponentServicesList(absPath, getImportDeclarationByFilePath(absPath)) || []
-      )
+      return filePathList.flatMap(getComponentServicesList)
     })
   }
   return function createPageRequestMap(
     fileImports?: Record<string, Declaration[]>
   ): Record<string, RequestFunction[] | undefined> {
     if (!fileImports) return {}
-    const result: Record<string, RequestFunction[] | undefined> = {}
-    Object.entries(fileImports)
-      .map(([absPath, list]) => {
+    return Object.entries(fileImports)
+      .reduce<{ filePath: string; absPath: string }[]>((acc, [absPath, list]) => {
         const filePath = absPathFormatAliasPath(absPath)
         const importDeclarationList = list?.filter(
           (declaration) =>
             declaration.type === 'ImportDeclaration' &&
             !new RegExp('^@?[a-zA-Z]').test(declaration.source)
         ) as ImportDeclaration[]
-
+        // 组装 页面 / 组件 的 相对路径与 Import 依赖的映射关系
         fileImportsMap.set(filePath, importDeclarationList)
 
         // 从页面组件开始访问
-        const texFileReg = /^@\/pages\/.*\.tsx$/
-        if (!texFileReg.test(filePath)) return () => {}
-
-        // 需要等 fileImportsMap 添加完毕再生成，不然会丢失部分数据
-        return () => {
-          const oldFunctionList =
-            result[filePath]?.map(({ method, url }) => `${method}-${url}`) || []
-          // 获取该页面引入的的接口列表并去重
-          const newFunctionList = getComponentServicesList(absPath, importDeclarationList)
-            .reduce<RequestFunction[]>((noRepeatList, item) => {
-              if (
-                !noRepeatList.some(
-                  ({ method, url }) => `${method}-${url}` === `${item.method}-${item.url}`
-                )
-              )
-                noRepeatList.push(item)
-              return noRepeatList
-            }, [])
-            .filter(({ method, url }) => !oldFunctionList.includes(`${method}-${url}`))
-          result[filePath] = [...(result[filePath] || []), ...newFunctionList]
-        }
-      })
-      .forEach((fn) => fn())
-    return result
+        if (/^@\/pages\/.*\.tsx$/.test(filePath)) acc.push({ filePath, absPath })
+        return acc
+      }, [])
+      .reduce<Record<string, RequestFunction[] | undefined>>((result, { filePath, absPath }) => {
+        // 获取该页面引入的的接口列表并去重
+        const newFunctionList = filterNoRepeat(
+          getComponentServicesList(absPath),
+          result[filePath] || [],
+          ({ method, url }) => `${method}-${url}`
+        )
+        result[filePath] = [...(result[filePath] || []), ...newFunctionList]
+        return result
+      }, {})
   }
 }
