@@ -79,6 +79,8 @@ export default function InitPageRequest(api: IApi) {
     return fileImportsMap.get(absPathFormatAliasPath(absPath)) || []
   }
 
+  /** 组件与接口映射的缓存，存储 getComponentServicesList 过程中存储已获取的组件，减少重复获取 */
+  const componentServicesMapCache = new Map<string, RequestFunction[]>()
   /**
    * DFS 获取 组件文件 import 的所有接口列表
    * @param path 组件路径(绝对路径)
@@ -86,8 +88,9 @@ export default function InitPageRequest(api: IApi) {
    * @returns 组件文件 import 的所有接口列表
    */
   function getComponentServicesList(filePath: string): RequestFunction[] {
+    if (componentServicesMapCache.get(filePath)) return componentServicesMapCache.get(filePath)
     const declarationList = getImportDeclarationByFilePath(filePath)
-    return declarationList.flatMap((declaration) => {
+    const result = declarationList.flatMap((declaration) => {
       if (declaration.source.startsWith('@/services')) {
         return getServiceList(
           declaration.source,
@@ -111,10 +114,13 @@ export default function InitPageRequest(api: IApi) {
       const filePathList = dirOrFileNormalization(dependencyPath)
       return filePathList.flatMap(getComponentServicesList)
     })
+    componentServicesMapCache.set(filePath, result)
+    return result
   }
   return function createPageRequestMap(
     fileImports?: Record<string, Declaration[]>
   ): Record<string, RequestFunction[] | undefined> {
+    componentServicesMapCache.clear()
     if (!fileImports) return {}
     return Object.entries(fileImports)
       .reduce<{ filePath: string; absPath: string }[]>((acc, [absPath, list]) => {
