@@ -102,13 +102,13 @@ export default function InitPageRequest(api: IApi) {
       let dependencyPath: string = declaration.source
       if (declaration.source.startsWith('.')) {
         // 拼接出当前文件引入的模块路径
-        const dir = filePath.slice(0, filePath.lastIndexOf('/'))
+        const dir = filePath.slice(0, filePath.lastIndexOf('\\'))
         dependencyPath = path.join(dir, declaration.source)
-      } else if (/^[/\\]/.test(declaration.source)) {
-        dependencyPath = '@' + dependencyPath
+      } else if (/^@?[/\\]/.test(declaration.source)) {
+        dependencyPath = api.paths.absSrcPath + dependencyPath.replace(/^@/, '')
       }
       // 获取模块的文件
-      const filePathList = dirOrFileNormalization(aliasPathFormatAbsPath(dependencyPath))
+      const filePathList = dirOrFileNormalization(dependencyPath)
       return filePathList.flatMap(getComponentServicesList)
     })
   }
