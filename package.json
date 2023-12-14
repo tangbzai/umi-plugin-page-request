@@ -2,6 +2,7 @@
   "name": "umi-plugin-page-request",
   "version": "0.0.1",
   "description": "umi 插件获取页面中使用的接口并生成页面与接口的映射",
+  "repository": "https://github.com/tangbzai/umi-plugin-page-request",
   "scripts": {
     "watch": "rollup -wc --configPlugin @rollup/plugin-typescript",
     "build": "rollup -c --configPlugin @rollup/plugin-typescript",
