@@ -1,6 +1,6 @@
 {
   "name": "umi-plugin-page-request",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "umi 插件获取页面中使用的接口并生成页面与接口的映射",
   "repository": "https://github.com/tangbzai/umi-plugin-page-request",
   "scripts": {
