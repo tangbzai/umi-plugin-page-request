@@ -25,7 +25,7 @@ function dirOrFileNormalization(dirOrFile?: string): string[] {
   return fs
     .readdirSync(dirOrFile)
     .filter((dirName) => /index\.(j|t)sx?$/.test(dirName))
-    .flatMap((dir) => dirOrFileNormalization(path.join(dirOrFile, `./${dir}`)))
+    .flatMap((dir) => dirOrFileNormalization(path.join(dirOrFile, dir)))
 }
 
 /** 列表去重后返回（含自身重复及与旧列表重复）*/
