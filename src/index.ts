@@ -28,9 +28,11 @@ export { PAGE_REQUEST_MAP }`,
   api.onPrepareBuildSuccess(({ fileImports, isWatch }) => {
     // 开发环境不在初始构建时执行 - 优化启动速度
     if (api.env === 'development' && !isWatch) return
+    const before = performance.now()
     // 创建获取 PAGE_REQUEST_MAP
     const pageRequestMap: Record<string, RequestFunction[] | undefined> =
       createPageRequestMap(fileImports)
+    api.logger.info(`pageRequestMap builded in ${Math.floor(performance.now() - before)} ms`)
     // 写入 PAGE_REQUEST_MAP 至入口文件
     writeIndexTmpFile(pageRequestTransform(pageRequestMap))
   })
