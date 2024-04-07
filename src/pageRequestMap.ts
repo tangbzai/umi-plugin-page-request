@@ -56,9 +56,7 @@ export default function InitPageRequest(api: IApi) {
   function getServiceList(filePath: string, functionNameList: string[]): RequestFunction[] {
     const group = filePath.match(/@\/services\/([^/\\]*)/)?.[1]
     if (!group || !servicesMap[group]) return []
-    return functionNameList
-      .map((functionName) => servicesMap[group][functionName])
-      .filter((t) => t) as RequestFunction[]
+    return functionNameList.map((functionName) => servicesMap[group][functionName]).filter((t) => t)
   }
 
   /** 绝对路径转换为别名路径 */
@@ -83,7 +81,7 @@ export default function InitPageRequest(api: IApi) {
   const componentServicesMapCache = new Map<string, RequestFunction[]>()
   /**
    * DFS 获取 组件文件 import 的所有接口列表
-   * @param path 组件路径(绝对路径)
+   * @param filePath 组件路径(绝对路径)
    * @param declaration import 描述对象
    * @returns 组件文件 import 的所有接口列表
    */
@@ -96,27 +94,31 @@ export default function InitPageRequest(api: IApi) {
           declaration.source,
           declaration.specifiers
             .map((item) => ('local' in item ? item.local : undefined))
-            .filter((t) => t) as string[]
+            .filter((t) => t)
         )
       }
       // 非本地模块被视为没有使用到 services 里的接口
-      if (!/^(\.|@?\/|@?\\)/.test(declaration.source)) return []
+      if (!/^(\.|@?[/\\])/.test(declaration.source)) return []
 
-      let dependencyPath: string = declaration.source
+      let dependencyPath = declaration.source
       if (declaration.source.startsWith('.')) {
         // 拼接出当前文件引入的模块路径
-        const dir = filePath.slice(0, filePath.lastIndexOf('\\'))
-        dependencyPath = path.join(dir, declaration.source)
-      } else if (/^@?[/\\]/.test(declaration.source)) {
-        dependencyPath = api.paths.absSrcPath + dependencyPath.replace(/^@/, '')
-      }
-      // 获取模块的文件
-      const filePathList = dirOrFileNormalization(dependencyPath)
-      return filePathList.flatMap(getComponentServicesList)
+        // 使用正则表达式匹配最后一个反斜杠或正斜杠
+        const lastSeparator = filePath.match(/[/\\][^/\\]*$/)?.[0] // 获取匹配到的最后一个分隔符
+        if (lastSeparator) {
+          const dir = filePath.slice(0, -lastSeparator.length) // 截取路径至最后一个分隔符之前的部分
+          dependencyPath = path.join(dir, declaration.source)
+        } else {
+          dependencyPath = path.join(filePath, declaration.source)
+        }
+      } else dependencyPath = aliasPathFormatAbsPath(dependencyPath)
+      // 获取模块的文件 并往下递归
+      return dirOrFileNormalization(dependencyPath).flatMap(getComponentServicesList)
     })
     componentServicesMapCache.set(filePath, result)
     return result
   }
+
   return function createPageRequestMap(
     fileImports?: Record<string, Declaration[]>
   ): Record<string, RequestFunction[] | undefined> {
