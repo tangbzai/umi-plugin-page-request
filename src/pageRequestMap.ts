@@ -30,17 +30,15 @@ function dirOrFileNormalization(dirOrFile?: string): string[] {
 
 /** 列表去重后返回（含自身重复及与旧列表重复）*/
 function filterNoRepeat<T>(newList: T[], oldList: T[], keyFn: (value: T) => string | number) {
-  const oldKeyList = oldList.map(keyFn)
-  return (
-    newList
-      .reduce((noRepeatList, item) => {
-        // 去除自身重复项
-        if (!noRepeatList.some((value) => keyFn(value) === keyFn(item))) noRepeatList.push(item)
-        return noRepeatList
-      }, [])
-      // 去除与旧列表之间的重复项
-      .filter((value) => !oldKeyList.includes(keyFn(value)))
-  )
+  const oldKeyList = new Set(oldList.map(keyFn))
+  const newKeySet = new Set()
+  return newList.filter((item) => {
+    const key = keyFn(item)
+    // 新列表出现过或旧列表中已存在则直接返回空
+    if (newKeySet.has(key) || oldKeyList.has(key)) return false
+    newKeySet.add(key)
+    return true
+  })
 }
 
 export default function InitPageRequest(api: IApi) {
