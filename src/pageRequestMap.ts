@@ -127,6 +127,7 @@ export default function InitPageRequest(api: IApi) {
     fileImports?: Record<string, Declaration[]>
   ): Record<string, RequestFunction[] | undefined> {
     componentServicesMapCache.clear()
+    fileImportsMap.clear()
     if (!fileImports) return {}
     return Object.entries(fileImports)
       .reduce<{ filePath: string; absPath: string }[]>((acc, [absPath, list]) => {
