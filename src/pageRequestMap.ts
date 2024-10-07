@@ -133,10 +133,10 @@ export default function InitPageRequest(api: IApi) {
       .reduce<{ filePath: string; absPath: string }[]>((acc, [absPath, list]) => {
         const filePath = absPathFormatAliasPath(absPath)
         const importDeclarationList = list?.filter(
-          (declaration) =>
+          (declaration): declaration is ImportDeclaration =>
             declaration.type === 'ImportDeclaration' &&
             !new RegExp('^@?[a-zA-Z]').test(declaration.source)
-        ) as ImportDeclaration[]
+        )
         // 组装 页面 / 组件 的 相对路径与 Import 依赖的映射关系
         fileImportsMap.set(filePath, importDeclarationList)
 
