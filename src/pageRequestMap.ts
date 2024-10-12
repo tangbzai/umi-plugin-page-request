@@ -5,27 +5,36 @@ import type { RequestFunction } from '../index.d'
 import getServiceMap from './getServiceMap'
 import type { Declaration, ImportDeclaration } from '../index.d'
 
+const DEFAULT_EXT = ['jsx', 'js', 'tsx', 'ts']
 /** 路径的目录或文件归一化为文件路径，省略文件尾缀时若是有同名会取有可能会取到多个文件 */
 function dirOrFileNormalization(dirOrFile?: string): string[] {
   if (!dirOrFile) return []
-  const ext = dirOrFile.lastIndexOf('.') > 0 ? dirOrFile.slice(dirOrFile.lastIndexOf('.') + 1) : ''
+  const dotLastIdx = dirOrFile.lastIndexOf('.')
+  const ext = dotLastIdx > -1 ? dirOrFile.slice(dotLastIdx + 1) : ''
   // dirOrFile 不属于 文件 或 目录 类型
   if (!fs.existsSync(dirOrFile)) {
     if (ext) return []
     // 尝试补充文件尾缀再获取
-    return ['.jsx', '.js', '.tsx', '.ts'].flatMap((addExt) =>
-      dirOrFileNormalization(dirOrFile + addExt)
-    )
+    return DEFAULT_EXT.flatMap((addExt) => dirOrFileNormalizationMemorize(`${dirOrFile}.${addExt}`))
   }
 
-  const fileStat = fs.statSync(dirOrFile)
   // dirOrFile 是 文件名称
-  if (fileStat.isFile()) return ['jsx', 'js', 'tsx', 'ts'].includes(ext) ? [dirOrFile] : []
+  if (fs.statSync(dirOrFile).isFile()) return DEFAULT_EXT.includes(ext) ? [dirOrFile] : []
   // dirOrFile 是 目录名 则 寻找入口文件
   return fs
     .readdirSync(dirOrFile)
     .filter((dirName) => /index\.(j|t)sx?$/.test(dirName))
-    .flatMap((dir) => dirOrFileNormalization(path.join(dirOrFile, dir)))
+    .flatMap((dir) => dirOrFileNormalizationMemorize(path.join(dirOrFile, dir)))
+}
+
+const dirOrFileNormalizationCache = new Map<string, string[]>()
+/** 缓存版 dirOrFileNormalization */
+function dirOrFileNormalizationMemorize(dirOrFile?: string): string[] {
+  const cache = dirOrFileNormalizationCache.get(dirOrFile)
+  if (cache) return cache
+  const result = dirOrFileNormalization(dirOrFile)
+  dirOrFileNormalizationCache.set(dirOrFile, result)
+  return result
 }
 
 /** 列表去重后返回 */
@@ -107,7 +116,7 @@ export default function InitPageRequest(api: IApi) {
       }
 
       // 获取模块的文件 并往下递归
-      return dirOrFileNormalization(
+      return dirOrFileNormalizationMemorize(
         getDeclarationSourceAbsPath(declaration.source, filePath)
       ).flatMap(getComponentServicesList)
     })
@@ -120,6 +129,7 @@ export default function InitPageRequest(api: IApi) {
   ): Record<string, RequestFunction[] | undefined> {
     componentServicesMapCache.clear()
     fileImportsMap.clear()
+    dirOrFileNormalizationCache.clear()
     if (!fileImports) return {}
     return Object.entries(fileImports)
       .flatMap(([absPath, list]) => {
