@@ -85,7 +85,7 @@ export default function InitPageRequest(api: IApi) {
   }
 
   type ImportMapItemType = { source: string; localList: string[] }
-  /** 模块 */
+  /** 模块导入关系映射 */
   const fileImportsMap = new Map<string, ImportMapItemType[]>()
 
   /** 通过文件路径获取 ImportDeclaration */
@@ -127,11 +127,8 @@ export default function InitPageRequest(api: IApi) {
   return function createPageRequestMap(
     fileImports?: Record<string, Declaration[]>
   ): Record<string, RequestFunction[] | undefined> {
-    componentServicesMapCache.clear()
-    fileImportsMap.clear()
-    dirOrFileNormalizationCache.clear()
     if (!fileImports) return {}
-    return Object.entries(fileImports)
+    const result = Object.entries(fileImports)
       .flatMap(([absPath, list]) => {
         const filePath = absPathFormatAliasPath(absPath)
         const importDeclarationList = list?.filter(
@@ -161,5 +158,10 @@ export default function InitPageRequest(api: IApi) {
         )
         return result
       }, {})
+
+    componentServicesMapCache.clear()
+    fileImportsMap.clear()
+    dirOrFileNormalizationCache.clear()
+    return result
   }
 }
