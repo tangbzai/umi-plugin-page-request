@@ -22,12 +22,14 @@ export { PAGE_REQUEST_MAP }`,
       path: 'index.ts',
     })
   }
+
   // 初始化
   const createPageRequestMap = InitPageRequest(api)
   // 构建成功之前
   api.onPrepareBuildSuccess(({ fileImports, isWatch }) => {
     // 开发环境不在初始构建时执行 - 优化启动速度
-    if (api.env === 'development' && !isWatch) return
+    // mako 中使用该优化有几率会导致开发环境生成出空对象
+    if (api.service.appData.bundler !== 'mako' && api.env === 'development' && !isWatch) return
     const before = performance.now()
     // 创建获取 PAGE_REQUEST_MAP
     const pageRequestMap: Record<string, RequestFunction[] | undefined> =
