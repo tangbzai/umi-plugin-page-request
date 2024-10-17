@@ -1,7 +1,7 @@
 import type { IApi } from 'umi'
 import type { RequestFunction } from '../index.d'
 import InitPageRequest from './pageRequestMap'
-import { pageRequestTransform } from './transform'
+import { pageRequestFormat } from './transform'
 
 /**
  * 获取页面组件使用的所有接口
@@ -36,7 +36,10 @@ export { PAGE_REQUEST_MAP }`,
       createPageRequestMap(fileImports)
     api.logger.info(`pageRequestMap builded in ${Math.floor(performance.now() - before)} ms`)
     // 写入 PAGE_REQUEST_MAP 至入口文件
-    writeIndexTmpFile(pageRequestTransform(pageRequestMap))
+    // const writeBefore = performance.now()
+    if (api.env === 'development') writeIndexTmpFile(pageRequestFormat(pageRequestMap))
+    else writeIndexTmpFile(JSON.stringify(pageRequestMap))
+    // api.logger.debug(`wrote in ${(performance.now() - writeBefore).toFixed(2)} ms`)
   })
 
   api.onGenerateFiles(({ isFirstTime }) => {

@@ -11,19 +11,19 @@ function addStringQuote(target?: string | number) {
   return `"${target}"`
 }
 
-export function pageRequestTransform<
+export function pageRequestFormat<
   T extends Record<string, string | number | RequestFunction[] | undefined> | RequestFunction[],
 >(obj: T, space = 0): string {
   if (typeof obj !== 'object') return obj
   if (Array.isArray(obj))
     return (
       obj.reduce<string>(
-        (acc, item) => `${acc}${getSpace(space + 2)}${pageRequestTransform(item, space + 2)},\n`,
+        (acc, item) => `${acc}${getSpace(space + 2)}${pageRequestFormat(item, space + 2)},\n`,
         '[\n'
       ) + `${getSpace(space)}]`
     )
   function getItemValue(value?: string | number | RequestFunction[]) {
-    if (value instanceof Object) return pageRequestTransform(value, space + 2)
+    if (value instanceof Object) return pageRequestFormat(value, space + 2)
     return addStringQuote(value)
   }
   return (
