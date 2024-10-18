@@ -38,7 +38,17 @@ export { PAGE_REQUEST_MAP }`,
     // 写入 PAGE_REQUEST_MAP 至入口文件
     // const writeBefore = performance.now()
     if (api.env === 'development') writeIndexTmpFile(pageRequestFormat(pageRequestMap))
-    else writeIndexTmpFile(JSON.stringify(pageRequestMap))
+    else
+      writeIndexTmpFile(
+        JSON.stringify(
+          Object.fromEntries(
+            Object.entries(pageRequestMap).map(([key, value]) => [
+              [`${key.replace(/^@\/pages\//, '/')}`],
+              value,
+            ])
+          )
+        )
+      )
     // api.logger.debug(`wrote in ${(performance.now() - writeBefore).toFixed(2)} ms`)
   })
 
